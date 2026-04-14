@@ -1,4 +1,4 @@
-import { useState } from "react";// it allows your component to remember data(state)
+import { useState } from "react"; // it allows your component to remember data(state)
 import axios from "axios";
 
 import AmountDisplay from "./AmountDisplay";  //importing child components
@@ -20,7 +20,15 @@ const [recurring, setRecurring]= useState(false);
 
 
 const handleSubmit = async ()=>{
-    const data ={
+
+    //validation
+     if(!amount || !description){
+        alert("Please add amount and description");
+        return;
+     }
+
+
+    const data = {
         amount,
         type,
         description,
@@ -41,7 +49,7 @@ const handleSubmit = async ()=>{
 
  return(
     <div 
-    // style={{card}}
+    
     >
     {/* <h3 style={{textAlign: "center"}}> New Transaction </h3> */}
     <AmountDisplay amount={amount} setAmount={setAmount}></AmountDisplay>
@@ -50,17 +58,9 @@ const handleSubmit = async ()=>{
     <DescriptionInput description={description} setDescription={setDescripton}/>
     <CategorySelect category={category} setCategory={setCategory}/>
     <RecurringToggle recurring={recurring} setRecurring={setRecurring}/>
-    <SubmitButton handleSubmit={handleSubmit}
-                  disabled={!amount || !category || !description}/> 
-                  {/* if amount and category are empty it will return */}
+    <SubmitButton handleSubmit={handleSubmit}></SubmitButton>
+                
     </div>
  );
 }
-// const card={
-//   width: "100%",
-//   padding: "20px",
-// //   borderRadius: "12px",
-//   boxShadow: "0 0 10px rgba(235, 22, 22, 0.1)", 
-
-//};
 export default TransactionForm;

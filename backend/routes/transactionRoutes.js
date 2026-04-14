@@ -6,6 +6,22 @@ import Transaction from "../models/Transaction.js";
 const router = express.Router();
 
 
+//update  ************* put
+router.put("/:id", async(req, res)=>{
+    try{
+        const updatedTransaction  = await Transaction.findByIdAndUpdate(
+            req.params.id, 
+            req.body,
+            {new: true}
+        );
+        res.json(updatedTransaction);
+
+    }catch(err){
+       res.status(500).json(err);
+    }
+});
+
+
 //create  **********post
 router.post("/", async(req, res)=>{
 try{
