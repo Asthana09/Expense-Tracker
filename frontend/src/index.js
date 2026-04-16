@@ -1,6 +1,5 @@
 import React from 'react';         // for jsx
 import ReactDOM from 'react-dom/client';     //to rendr app in browser
-//import './index.css';
 import App from './App';                    //import main app component
 import reportWebVitals from './reportWebVitals';
 import {BrowserRouter} from 'react-router-dom';           //enable routing (page navigation)

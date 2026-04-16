@@ -25,6 +25,5 @@ const input ={
  
   
 }
-//#8a508c" : "#e9d6ea" : #6b166e
 
 export default AmountDisplay;

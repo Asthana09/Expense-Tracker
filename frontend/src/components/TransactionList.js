@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";   //use effect 
 import axios from "axios";       // use to call backend API form frontend     
+import CategorySelect from "./CategorySelect.js";
+
+
 
 function TransactionList() {
   const [transactions, setTransactions] = useState([]);
-  const [editingTransaction, seteditingTransaction] = useState(null);
-
+  const [filterCategory, setFilterCategory] = useState("All");
+  // const [editingTransaction, seteditingTransaction] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editAmount, setEditAmount]= useState("");
   useEffect(() => {        // when component loads, run fetch data
     fetchData();
   }, []); // run only when component loads(not again and again)
@@ -15,53 +20,38 @@ function TransactionList() {
   };
 
 
+    // **************Delete function
   const deleteTransaction = async (id) => {
     await axios.delete(`http://localhost:5000/api/transactions/${id}`);
     fetchData();
   };
 
-  // **************Edit
+  // **************Edit function
    const startEdit =(transaction)=>{
-    seteditingTransaction(transaction);       //store transaction in state // fill edit form with existing data
-   };
-   //******handle Changes */
-   const handleChnages =(e)=>{              //function runs when user type in input
-    const {name, value} =e.target;          //get name-> name of feild, value is input 
-    seteditingTransaction(prev=>({    //updating state  using previous value 
-      ...prev,                  //copy all existing fields
-      [name]:value              //update only the feild user changed
-    })
-    );
-   };
-  //  ***********update
-  const updateTransaction = async ()=>{            //this will run when user clicks update button
-    if(!editingTransaction) return;              //if no transaction selected stop running
+       setEditingId(transaction._id);
+       setEditAmount(transaction.amount);
+  };
+   const updateTransaction = async (id)=>{
     try{
-      const updateData ={                              
-        description: editingTransaction.description, //sending data to backend
-        amount: Number(editingTransaction.amount),
-      }
-      await axios.put(`http://localhost:5000/api/transactions/${editingTransaction._id}`,updateData
-      );
-          alert("Transaction updated successfully");  // 
+      await axios.put(`http://localhost:5000/api/transactions/${id}`,
+        {
+         amount : Number(editAmount)
+      });
 
- fetchData();
+        alert("Amount updated successfully");
 
-    // reset form
-    seteditingTransaction({
-      description: "",
-      amount: ""
-    });
-
-  } catch (err) {
-    console.log(err);
-  }
-};
+        setEditingId(null);
+        setEditAmount("");
+        fetchData();                    //get updated list from database
+        } catch(err){
+         console.log(err);
+        }
+   };
   
   
 
-  // //***************Balance
-   const totalIncome = transactions
+  // //*************** Balance *************
+   const totalIncome = transactions 
    .filter(t=> t.type?.toLowerCase() === "income")
    .reduce((acc, t)=> acc + Number(t.amount), 0);
 
@@ -71,61 +61,64 @@ function TransactionList() {
    .reduce((acc, t)=> acc + Number(t.amount), 0);
 
    const balance = totalIncome - totalExpense;
+      
+   const filteredTransactions =
+   filterCategory === "All"?transactions:
+   transactions.filter((t)=>t.category === filterCategory);
 
+
+  // ******************* Return
 
   return (
     <div style={{ width: "100%", color:"#6b166e" }}>
 
-
-
-      {/* {/* Balance  */}
+      {/* {/********** Balance  */}
       <div style={balanceBox}>
         <h2>Balance : ₹{balance}</h2>
         <p style={{color:"green"}}>Income : ₹{totalIncome}  </p>
         <p style={{color:"red"}}>Expense : ₹{totalExpense}  </p>
       </div>
 
+{/* **************filter dropdown */}
+<p style={{marginBottom:"5px"}}>Search Category</p>
+<CategorySelect
+  filterCategory={filterCategory}
+  setFilterCategory={setFilterCategory}
+/>
 
-{/* ****************Edit  */}
-     
-       
-  <div style={balanceBox}>
 
-    <h2>Edit Transaction</h2>
-    <input style={{borderRadius:"6px" , width:"80px", textAlign:"center",color:"#6b166e",marginRight:"5px", padding:"3px"}}
-      name="description"          
-      value={editingTransaction?.description || ""}  //show value form state or null
-      onChange={handleChnages}
-      placeholder="Description"
-    />
-    <input  style={{borderRadius:"6px" , width:"60px", textAlign:"center",color:"#6b166e",padding:"3px" }}
-      type="number"
-      name="amount"
-      value={editingTransaction?.amount || ""}
-      onChange={handleChnages}
-      placeholder="Amount"
-    />
-    <br />
-    <button style={{backgroundColor:"#e9d6ea", color:"#6b166e", borderRadius:"6px",margin:"10px", padding:"5px"}}
-    onClick={updateTransaction}>
-      Update
-    </button>
-  </div>
-      
-      <h2>Transactions</h2>
-
-      {transactions.map(t => (
+{/* *****************UI  */}
+      <h2>Transactions </h2>
+      {filteredTransactions.map((t )=> (
         <div key={t._id} style={item}>   
         <div>      
-          <p>{t.description}&nbsp;&nbsp;</p>
-          <small>{t.category}</small>
+          <p >{t.description}&nbsp;&nbsp;</p>
+          <p style={{fontWeight:"bold"}}>{t.category}</p>
           </div>
           <div>
-          <p>₹{t.amount}</p>
-          <button style={{backgroundColor:"#e9d6ea", color:"#6b166e", borderRadius:"6px",marginRight:"4px", padding:"3px 10px"}} 
-              onClick={() => startEdit(t)}>Edit</button>
+            {editingId === t._id? (
+              <>
+              <input
+              type="number"
+              value={editAmount}
+              onChange={(e)=> setEditAmount(e.target.value)}
+              style={{width:"60px",border:"none"}}
+              />
+              <button style={{backgroundColor:"#e9d6ea", color:"#6b166e", borderRadius:"6px", padding:"3px"}}
+                onClick={()=>(updateTransaction(t._id))} >
+                  Update</button>
+              </>
+            ) : (
+              <>
+              <p>₹{t.amount}</p>
+               <button style={{backgroundColor:"#e9d6ea", color:"#6b166e", borderRadius:"6px", margin:"5px", padding:"3px 10px"}}
+               onClick={()=>{startEdit(t)}} >
+                Edit
+               </button>
+            
              <button style={{backgroundColor:"#e9d6ea", color:"#6b166e", borderRadius:"6px", padding:"3px"}} 
           onClick={() => deleteTransaction(t._id)}>Delete</button>
+          </>)}
         </div>
         </div>
       ))}

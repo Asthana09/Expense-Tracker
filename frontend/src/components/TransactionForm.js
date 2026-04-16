@@ -4,7 +4,7 @@ import axios from "axios";
 import AmountDisplay from "./AmountDisplay";  //importing child components
 import DatePicker from "./DatePicker";
 import TypeSelector from "./TypeSelector";
-import CategorySelect from "./CategorySelect";
+import CategorySelect from "./CategorySelect.js";
 import DescriptionInput from "./DescriptionInput";
 import RecurringToggle from "./RecurringToggle";
 import SubmitButton from "./SubmitButton";
@@ -15,24 +15,23 @@ const [amount, setAmount] = useState("");
 const [date, setDate] = useState("");
 const [type, setType] = useState("expense");
 const [description, setDescripton] = useState("");
-const [category, setCategory] = useState("");
+const [filterCategory, setFilterCategory] = useState("");
 const [recurring, setRecurring]= useState(false);
 
 
 const handleSubmit = async ()=>{
 
     //validation
-     if(!amount || !description){
-        alert("Please add amount and description");
+     if(!amount || !description || !filterCategory){
+        alert("Please add amount , category and description");
         return;
      }
-
-
+                 
     const data = {
         amount,
         type,
         description,
-        category,
+        category: filterCategory,
         date,
         recurring,
     };
@@ -56,7 +55,7 @@ const handleSubmit = async ()=>{
     <DatePicker date={date} setDate={setDate}/>
     <TypeSelector type={type} setType={setType}/>
     <DescriptionInput description={description} setDescription={setDescripton}/>
-    <CategorySelect category={category} setCategory={setCategory}/>
+    <CategorySelect category={filterCategory} setFilterCategory={setFilterCategory} />
     <RecurringToggle recurring={recurring} setRecurring={setRecurring}/>
     <SubmitButton handleSubmit={handleSubmit}></SubmitButton>
                 
