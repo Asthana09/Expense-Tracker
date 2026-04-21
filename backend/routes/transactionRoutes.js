@@ -22,94 +22,137 @@ router.put("/:id", async (req, res) => {
 });
 
 
-        //create  **********post
-        router.post("/", async (req, res) => {
-            try {
-                //reccuring date
-                const data = {
-                    ...req.body,
-        date: req.body.date ? new Date(req.body.date) : new Date(),
-        lastGenerated: req.body.recurring ? new Date(req.body.date) : null,
-        frequency: req.body.recurring ? req.body.frequency : null
-            };
-                //transaction
-                const transaction = new Transaction(data);
-                await transaction.save();
-                res.status(201).json(transaction);
-            } catch (err) {
-                res.status(500).json(err);
-            }
-        });
+//create  **********post
+router.post("/recurring", async (req, res) => {
+  try {
+    const { amount, type, description, category, date, recurring, frequency } = req.body;
 
-       // read **********get
+    const amt = Number(amount);
 
-        router.get("/", async (req, res) => {
-            try {
-        //    Recurring 
-        const recurringTransactions = await Transaction.find({ recurring: true });
+    // get all transactions
+    const transactions = await Transaction.find();
 
+    const totalIncome = transactions
+      .filter(t => t.type === "income")
+      .reduce((acc, t) => acc + Number(t.amount), 0);
 
-        const today = new Date();    //today's date
-        today.setHours(0, 0, 0, 0); // removing time  
+    const totalExpense = transactions
+      .filter(t => t.type === "expense" || t.type === "investment")
+      .reduce((acc, t) => acc + Number(t.amount), 0);
 
-        for (let t of recurringTransactions) { // go one by one through all transaction where recurring=true
-           
-           let lastDate = new Date(t.lastGenerated || t.date);
-            let nextDate = new Date(lastDate);  //copying last date
+    let balance = totalIncome - totalExpense;
 
-            //! nextDate.setMonth(nextDate.getMonth()+1);
+    // =========================
+    // NON-RECURRING
+    // =========================
+    if (!recurring) {
 
-            if (t.frequency === "daily") {
-                nextDate.setDate(nextDate.getDate() + 1);
-            }else if(t.frequency === "weekly"){
-              nextDate.setDate(nextDate.getDate()+7);
-            } else if (t.frequency === "monthly") {
-                nextDate.setMonth(nextDate.getMonth() + 1);
-            }else{
-              continue;
-            }
+      if ((type === "expense" || type === "investment") && amt > balance) {
+        return res.json({ message: "Insufficient Balance" });
+      }
 
-            // if(nextDate <= new Date()){
-            //     const {_id, ...rest}= t._doc;
-            //     await Transaction.create({
-            //       ...rest,
-            //        date: nextDate
-            //     });
-            //      t.lastGenerated = nextDate;
-            //     await t.save();
-              
+      await Transaction.create(req.body);
 
-
-            while (nextDate <= today) {
-              const obj = t.toObject();
-                delete obj._id;
-                await Transaction.create({
-                    ...obj,
-                    date: new Date(nextDate),
-                    recurring: false // 
-                });
-
-                t.lastGenerated = new Date(nextDate);
-                await t.save();
-
-                // move to next cycle
-                if (t.frequency === "daily") {
-                    nextDate.setDate(nextDate.getDate() + 1);
-                } else if(t.frequency === "weekly"){
-                  nextDate.setDate(nextDate.getDate()+7);
-                }
-                else {
-                    nextDate.setMonth(nextDate.getMonth() + 1);
-                }
-            }
-
-        }
-
-       const data = await Transaction.find().sort({ createdAt: -1 });
-        res.json(data);
-    } catch (err) {
-        res.status(500).json(err)
+      return res.json({ message: "Transaction Added" });
     }
+
+    // =========================
+    // RECURRING LOGIC
+    // =========================
+
+    const today = new Date();
+    const selected = new Date(date);
+
+    today.setHours(0,0,0,0);
+    selected.setHours(0,0,0,0);
+
+    const diffTime = today - selected;
+    let daysDifference = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (daysDifference < 0) daysDifference = 0;
+
+    let occurrenceCount = 0;
+
+    if (frequency === "daily") {
+      occurrenceCount = daysDifference;
+    }
+
+    if (frequency === "weekly") {
+      occurrenceCount = Math.floor(daysDifference / 7);
+    }
+
+    if (frequency === "monthly") {
+      const months =
+        (today.getFullYear() - selected.getFullYear()) * 12 +
+        (today.getMonth() - selected.getMonth());
+      occurrenceCount = months;
+    }
+
+    let countAdded = 0;
+
+    for (let i = 0; i < occurrenceCount; i++) {
+
+      if (balance < amt) break;
+
+      const newDate = new Date(selected);
+
+      if (frequency === "daily") {
+        newDate.setDate(selected.getDate() + i);
+      }
+
+      if (frequency === "weekly") {
+        newDate.setDate(selected.getDate() + i * 7);
+      }
+
+      if (frequency === "monthly") {
+        newDate.setMonth(selected.getMonth() + i);
+      }
+
+      await Transaction.create({
+        amount,
+        type,
+        description,
+        category,
+        date: newDate,
+        recurring,
+        frequency
+      });
+
+      balance -= amt;
+      countAdded++;
+    }
+
+    // =========================
+    // RESPONSE
+    // =========================
+
+    if (countAdded === 0) {
+      return res.json({ message: "Insufficient Balance" });
+    }
+
+    if (countAdded < occurrenceCount) {
+      return res.json({
+        message: `Only ${countAdded} transactions added due to low balance`
+      });
+    }
+
+    return res.json({ message: "Recurring transactions added" });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// read **********get
+
+router.get("/", async (req, res) => {
+  try {
+    const data = await Transaction.find().sort({ createdAt: -1 });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
 //delete

@@ -43,37 +43,69 @@ useEffect(()=>{
 
 
 
-const handleSubmit = async ()=>{
+// const handleSubmit = async ()=>{
 
-    //validation
-     if(!amount || !description ||(type !=="income" && !filterCategory) ){
-        alert("Please add amount , category and description");
-        return;
-     }
-    //  balance check
-     if((type === "expense" || type === "investment") && Number(amount)>balance){
-        alert("Insufficient Balance");
-        return;
-     }
+//     //validation
+//      if(!amount || !description ||(type !=="income" && !filterCategory) ){
+//         alert("Please add amount , category and description");
+//         return;
+//      }
+//     //  balance check
+//      if((type === "expense" || type === "investment") && Number(amount)>balance){
+//         alert("Insufficient Balance");
+//         return;
+//      }
                  
-    const data = {
-        amount,
-        type,
-        description,
-        category: type ==="income"? "Income" : filterCategory,
-        date,
-        recurring,
-        frequency: recurring ? frequency : null 
-    };
-    try{
-        await axios.post ("http://localhost:5000/api/transactions", data);
-        alert("Transaction Added");
-        window.location.reload();
+//     const data = {
+//         amount,
+//         type,
+//         description,
+//         category: type ==="income"? "Income" : filterCategory,
+//         date,
+//         recurring,
+//         frequency: recurring ? frequency : null 
+//     };
+//     try{
+//         await axios.post ("http://localhost:5000/api/transactions", data);
+//         alert("Transaction Added");
+//         window.location.reload();
 
-    }catch(err){
-        console.log(err);
-    }
+//     }catch(err){
+//         console.log(err);
+//     }
     
+// };
+
+
+const handleSubmit = async () => {
+
+  if (!amount || !description || (type !== "income" && !filterCategory)) {
+    alert("Please add amount, category and description");
+    return;
+  }
+
+  const data = {
+    amount,
+    type,
+    description,
+    category: type === "income" ? "Income" : filterCategory,
+    date,
+    recurring,
+    frequency
+  };
+
+  try {
+    const res = await axios.post(
+      "http://localhost:5000/api/transactions/recurring",
+      data
+    );
+
+    alert(res.data.message);
+    window.location.reload();
+
+  } catch (err) {
+    console.log(err);
+  }
 };
 
  return(
