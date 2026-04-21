@@ -10,7 +10,7 @@ const btn = {
   padding: "12px",
   marginTop: "15px",
   marginLeft:"15px",
-  background:"black",
+  // background:"black",
   background: "#8a508c",
   color: "white",
   borderRadius:"20px",

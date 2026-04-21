@@ -2,11 +2,23 @@ import mongoose from "mongoose"; //
 
 const transactionSchema = new mongoose.Schema({
     amount: Number,
-    type:String,
+     type:String,
     date:Date,
     description: String,
     category: String,
-    recurring: Boolean 
+    recurring:{
+        type:Boolean,
+        default:false
+    },
+    frequency:{
+        type:String,
+        default:"monthly"
+    },
+     lastGenerated:{
+        type:Date,
+        default: null
+     }
+
 },{timestamps:true});  // automatically adds the time or updatedat createdat
  const Transaction = mongoose.model("Transaction", transactionSchema);
 

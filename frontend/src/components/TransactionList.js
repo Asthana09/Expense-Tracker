@@ -56,14 +56,18 @@ function TransactionList() {
    .reduce((acc, t)=> acc + Number(t.amount), 0);
 
 
-   const totalExpense = transactions
-   .filter(t => t.type?.toLowerCase() === "expense")
-   .reduce((acc, t)=> acc + Number(t.amount), 0);
+   const totalExpense  = transactions
+   .filter(t => 
+            t.type?.toLowerCase() === "expense" || 
+            t.type?.toLowerCase() === "investment")
+    .reduce((acc, t)=> acc + Number(t.amount), 0);
 
    const balance = totalIncome - totalExpense;
+
       
    const filteredTransactions =
-   filterCategory === "All"?transactions:
+   filterCategory === "All" || !filterCategory
+   ?transactions:
    transactions.filter((t)=>t.category === filterCategory);
 
 
@@ -84,6 +88,7 @@ function TransactionList() {
 <CategorySelect
   filterCategory={filterCategory}
   setFilterCategory={setFilterCategory}
+  isfilter={true}
 />
 
 
