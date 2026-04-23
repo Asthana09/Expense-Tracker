@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import transactionRoutes from "./routes/transactionRoutes.js";
 
 
-dotenv.configDotenv();
+dotenv.configDotenv();     
 
 const app = express(); // created express application and app is main server
 

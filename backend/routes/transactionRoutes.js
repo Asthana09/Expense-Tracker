@@ -46,41 +46,32 @@ router.post("/recurring", async (req, res) => {
     // NON-RECURRING
     // =========================
     if (!recurring) {
-
       if ((type === "expense" || type === "investment") && amt > balance) {
         return res.json({ message: "Insufficient Balance" });
       }
-
       await Transaction.create(req.body);
-
       return res.json({ message: "Transaction Added" });
     }
-
     // =========================
     // RECURRING LOGIC
     // =========================
-
     const today = new Date();
     const selected = new Date(date);
 
+    //truning time 00 so that only date will be considered
     today.setHours(0,0,0,0);
     selected.setHours(0,0,0,0);
 
     const diffTime = today - selected;
     let daysDifference = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
     if (daysDifference < 0) daysDifference = 0;
-
     let occurrenceCount = 0;
-
     if (frequency === "daily") {
       occurrenceCount = daysDifference;
     }
-
     if (frequency === "weekly") {
       occurrenceCount = Math.floor(daysDifference / 7);
     }
-
     if (frequency === "monthly") {
       const months =
         (today.getFullYear() - selected.getFullYear()) * 12 +
@@ -93,21 +84,16 @@ router.post("/recurring", async (req, res) => {
     for (let i = 0; i < occurrenceCount; i++) {
 
       if (balance < amt) break;
-
       const newDate = new Date(selected);
-
       if (frequency === "daily") {
         newDate.setDate(selected.getDate() + i);
       }
-
       if (frequency === "weekly") {
         newDate.setDate(selected.getDate() + i * 7);
       }
-
       if (frequency === "monthly") {
         newDate.setMonth(selected.getMonth() + i);
       }
-
       await Transaction.create({
         amount,
         type,
@@ -117,25 +103,20 @@ router.post("/recurring", async (req, res) => {
         recurring,
         frequency
       });
-
       balance -= amt;
       countAdded++;
     }
-
     // =========================
     // RESPONSE
     // =========================
-
     if (countAdded === 0) {
       return res.json({ message: "Insufficient Balance" });
     }
-
     if (countAdded < occurrenceCount) {
       return res.json({
         message: `Only ${countAdded} transactions added due to low balance`
       });
     }
-
     return res.json({ message: "Recurring transactions added" });
 
   } catch (err) {
